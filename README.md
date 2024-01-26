@@ -128,3 +128,9 @@ To set it up:
     ```bash
     chmod +x dev.sh
     ```
+
+## Unpacking the Encrypted Backup 🔐
+
+Imagine you've downloaded a backup, and now you're ready to unpack it. Sure, you could type a bunch of commands, but here's a simpler way:
+
+Run the `./unpack_backup.sh backup_file.tar.zst.gpg` script on your host machine. You'll be prompted to enter your passphrase. Once done, you should find a `backup` folder in your current working directory.
