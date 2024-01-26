@@ -102,6 +102,16 @@ Follow these steps to deploy Docker Auto Backup:
     Generate a GPG key on your local machine (referred to as the host machine later). For details, a quick search should guide you. Then, put your **GPG Key ID** into the `GPG_RECIPIENT` environment variable.
 
     Export your GPG key's public key, create a folder named `gpg` inside the compose file's directory, and place your `public_key.gpg` file into that folder. The name is arbitrary and does not matter.
+
+    The final project tree should resemble:
+
+    ```
+    compose-project/
+    ├── gpg/
+    │   └── public_key.gpg
+    ├── .env
+    └── docker-compose.yml
+    ```
   
   4. Deploy the stack:
       ```bash
