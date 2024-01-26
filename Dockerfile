@@ -15,7 +15,7 @@ RUN apt-get update
 RUN apt-get install -y cron zstd gnupg
 RUN rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /usr/src/app/target/release/rust-backup-generator /app/rust-backup-generator
+COPY --from=builder /usr/src/app/target/release/docker-auto-backup /app/docker-auto-backup
 COPY generate_backup.sh /app/generate_backup.sh
 COPY entrypoint.sh /app/entrypoint.sh
 
