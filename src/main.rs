@@ -24,5 +24,7 @@ async fn main() {
     .await
     .unwrap();
 
+    backup::cleanup(&out_file_name);
+
     info!("done");
 }

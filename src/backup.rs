@@ -44,3 +44,25 @@ pub fn create_backup() -> String {
 
     String::from(format!("{}.tar.zst.gpg", &date))
 }
+
+pub fn cleanup(file_name: &str) {
+    let cleanup = match std::env::var("DO_NOT_CLEANUP") {
+        Ok(data) => data != "true",
+        Err(_) => true,
+    };
+
+    if !cleanup {
+        info!("skipping cleanup");
+        return;
+    }
+
+    match std::fs::remove_file(file_name) {
+        Ok(_) => {
+            info!("(cleanup) file \"{}\" deleted", file_name);
+        }
+        Err(e) => {
+            error!("(cleanup) failed to delete file \"{}\"\n\n{}", file_name, e);
+            std::process::exit(1);
+        }
+    }
+}
