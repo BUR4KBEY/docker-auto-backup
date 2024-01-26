@@ -2,6 +2,8 @@
 
 printenv > /etc/environment
 
+: ${CRON_SYNTAX:='0 4 * * *'}
+
 # Import GPG public keys from /gpg folder
 for pubkey_file in /gpg/*.gpg; do
   gpg --import "$pubkey_file"
@@ -11,7 +13,7 @@ done
 touch /app/cron.log
 
 # Schedule the job
-echo "*/5 * * * * cd /app && ./rust-backup-generator > /app/cron.log 2>&1" > /etc/crontab
+echo "$CRON_SYNTAX cd /app && ./rust-backup-generator > /app/cron.log 2>&1" > /etc/crontab
 crontab /etc/crontab
 
 # Start cron daemon
