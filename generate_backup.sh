@@ -21,7 +21,7 @@ tar -cf temp/backup.tar -C temp backup
 
 zstd -19 temp/backup.tar
 
-gpg --encrypt --recipient $GPG_RECIPIENT --out temp/backup.tar.zst.gpg temp/backup.tar.zst
+gpg --always-trust --encrypt --recipient $GPG_RECIPIENT --out temp/backup.tar.zst.gpg temp/backup.tar.zst
 
 mv temp/backup.tar.zst.gpg ./$DATE.tar.zst.gpg
 
