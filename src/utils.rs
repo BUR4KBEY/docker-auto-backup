@@ -9,3 +9,10 @@ pub fn get_env(key: &str) -> String {
         }
     }
 }
+
+pub fn get_env_without_exit(key: &str) -> Option<String> {
+    match std::env::var(key) {
+        Ok(val) => Some(val),
+        Err(_) => None,
+    }
+}

@@ -1,5 +1,6 @@
 mod backblaze;
 mod backup;
+mod ntfy;
 mod utils;
 
 use backblaze::BackBlazeB2Uploader;
@@ -21,10 +22,7 @@ async fn main() {
         &out_file_name,
         &format!("backups/{}", &out_file_name),
     )
-    .await
-    .unwrap();
-
-    backup::cleanup(&out_file_name);
+    .await;
 
     info!("done");
 }

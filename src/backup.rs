@@ -46,9 +46,9 @@ pub fn create_backup() -> String {
 }
 
 pub fn cleanup(file_name: &str) {
-    let cleanup = match std::env::var("DO_NOT_CLEANUP") {
-        Ok(data) => data != "true",
-        Err(_) => true,
+    let cleanup = match utils::get_env_without_exit("DO_NOT_CLEANUP") {
+        Some(data) => data != "true",
+        None => true,
     };
 
     if !cleanup {

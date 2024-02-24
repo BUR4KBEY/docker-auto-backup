@@ -1,7 +1,7 @@
-use s3::error::S3Error;
-
 use tokio::fs::File;
 use tracing::{error, info};
+
+use crate::{backup, ntfy};
 
 use super::super::utils;
 use super::storage::BackBlazeB2Storage;
@@ -9,10 +9,7 @@ use super::storage::BackBlazeB2Storage;
 pub struct BackBlazeB2Uploader {}
 
 impl BackBlazeB2Uploader {
-    pub async fn upload_file_as_stream(
-        file_name: &str,
-        path_to_write: &str,
-    ) -> Result<(), S3Error> {
+    pub async fn upload_file_as_stream(file_name: &str, path_to_write: &str) {
         let key_id = utils::get_env("BACKBLAZE_KEY_ID");
         let application_key = utils::get_env("BACKBLAZE_APPLICATION_KEY");
         let bucket_region = utils::get_env("BACKBLAZE_BUCKET_REGION");
@@ -23,6 +20,7 @@ impl BackBlazeB2Uploader {
                 Ok(file) => file,
                 Err(e) => {
                     error!("failed to open file \"{}\"\n\n{}", file_name, e);
+                    backup::cleanup(file_name);
                     std::process::exit(1);
                 }
             }
@@ -38,11 +36,16 @@ impl BackBlazeB2Uploader {
             Ok(_) => {
                 info!("uploaded file \"{}\" to \"{}\"", file_name, path_to_write);
 
-                Ok(())
+                backup::cleanup(file_name);
+                ntfy::send_notification("Backblaze B2 - Backup Successful ✅").await;
             }
 
             Err(e) => {
                 error!("failed to upload file \"{}\"\n\n{}", file_name, e);
+
+                backup::cleanup(file_name);
+                ntfy::send_notification("Backblaze B2 - Backup Failed ⚠️").await;
+
                 std::process::exit(1);
             }
         }
