@@ -75,6 +75,8 @@ Follow these steps to deploy Docker Auto Backup:
           BACKBLAZE_BUCKET_REGION: ${BACKBLAZE_BUCKET_REGION}
           BACKBLAZE_BUCKET_NAME: ${BACKBLAZE_BUCKET_NAME}
           GPG_RECIPIENT: ${GPG_RECIPIENT}
+          # NTFY_URL: https://ntfy.sh/example # optional
+          # NTFY_CA_FILE_PATH: /certs/ca.pem # optional, used to setting up a custom ca file while requesting to the ntfy server
           # CRON_SYNTAX: '0 4 * * *' # optional, default value is provided
           # RUN_AT_STARTUP: false # optional, default value is provided
           # DO_NOT_CLEANUP: false # optional, default value is provided
@@ -85,6 +87,7 @@ Follow these steps to deploy Docker Auto Backup:
           - ../service-1/data:/backup/service-1:ro # /backup must be same as environment.BACKUP_FOLDER_PATH
           - /path/to/things_should_be_backed_up:/backup/things:ro
           - ./gpg:/gpg:ro
+          # - ./ca.pem:/certs/ca.pem # optional, check `NTFY_CA_FILE_PATH` environment variable
     ```
 
     Additionally, if you prefer not to expose sensitive information directly in the compose file (recommended), create a `.env` file as follows:
