@@ -156,6 +156,9 @@ In this configuration file:
 
   - For the container named `service-2`, the specified pre-build script is executed first (`touch /root/logs` and `echo "pre-build script ran" >> /root/logs`), followed by retrieving the files at `/data/.` and mounting them to `/backup/service-2/data` within the backup container. Additionally, the post-build script (`echo "post-build script ran" >> /root/logs`) is executed in the `service-2` container as part of the cleanup process.
 
+> [!NOTE]  
+> The reason we use `/data/.` instead of `/data` is that the retrieval process depends on the `docker cp` command. Imagine you want to mount the `/data` folder to `/backups/service-1`. If you don't use `/data/.`, it will mount to `/backups/service-1/data` instead of `/backups/service-1`.
+
 To use this configuration file, mount it to the container along with the Docker socket:
 
 ```yml
@@ -167,9 +170,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config.yml:/app/config.yml:ro
 ```
-
-> [!NOTE]  
-> The reason we use `/data/.` instead of `/data` is that the retrieval process depends on the `docker cp` command. Imagine you want to mount the `/data` folder to `/backups/service-1`. If you don't use `/data/.`, it will mount to `/backups/service-1/data` instead of `/backups/service-1`.
 
 ## Development 🔧
 
