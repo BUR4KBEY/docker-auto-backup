@@ -69,7 +69,7 @@ pub async fn create_docker_containers_backup(config: &Config) {
                 let mut command = Command::new("docker");
                 command
                     .arg("exec")
-                    .arg("-it")
+                    .arg("-i")
                     .arg(&container.name)
                     .arg("sh")
                     .arg("-c")
@@ -112,7 +112,7 @@ pub async fn create_docker_containers_backup(config: &Config) {
                 let mut command = Command::new("docker");
                 command
                     .arg("exec")
-                    .arg("-it")
+                    .arg("-i")
                     .arg(&container.name)
                     .arg("sh")
                     .arg("-c")
