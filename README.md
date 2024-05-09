@@ -126,7 +126,7 @@ Follow these steps to deploy Docker Auto Backup:
       docker compose exec -it app /app/docker-auto-backup
       ```
 
-## ⭐ Direct Backups From Containers
+## Direct Backups From Containers ⭐
 
 Introducing a new feature, Docker Auto Backup now supports generating backups directly from within Docker containers, with added support for pre/post script execution.
 
