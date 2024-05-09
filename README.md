@@ -62,7 +62,6 @@ Follow these steps to deploy Docker Auto Backup:
 3. Create a `docker-compose.yml` file elsewhere on your system:
 
     ```yml
-    version: "3"
     services:
       app:
         image: docker-auto-backup-generator
@@ -126,6 +125,48 @@ Follow these steps to deploy Docker Auto Backup:
       ```bash
       docker compose exec -it app /app/docker-auto-backup
       ```
+
+## ⭐ Direct Backups From Containers
+
+Introducing a new feature, Docker Auto Backup now supports generating backups directly from within Docker containers, with added support for pre/post script execution.
+
+The rationale behind this feature is to accommodate scenarios where specific commands need to be executed to generate the data required for backup. For instance, consider a PostgreSQL container where you aim to perform periodic backups. Mounting the `/var/run/postgres/data` directory directly might include unnecessary files, bloating the backup size. Instead, generating a dump using the `pg_dump` command and backing up the resulting SQL file is a more efficient approach.
+
+To utilize this feature, begin by creating a `config.yml` file with the following contents:
+
+```yml
+containers:
+  - name: service-1
+    files:
+      - /data/.:/backup/service-1/data
+
+  - name: service-2
+    files:
+      - /data/.:/backup/service-2/data
+    pre_build_script: |
+      touch /root/logs
+      echo "pre-build script ran" >> /root/logs
+    post_build_script: |
+      echo "post-build script ran" >> /root/logs
+```
+
+In this configuration file:
+
+  - For the container named `service-1`, the files located at `/data/.` are retrieved and mounted to `/backup/service-1/data` within the backup container.
+
+  - For the container named `service-2`, the specified pre-build script is executed first (`touch /root/logs` and `echo "pre-build script ran" >> /root/logs`), followed by retrieving the files at `/data/.` and mounting them to `/backup/service-2/data` within the backup container. Additionally, the post-build script (`echo "post-build script ran" >> /root/logs`) is executed in the `service-2` container as part of the cleanup process.
+
+To use this configuration file, mount it to the container along with the Docker socket:
+
+```yml
+services:
+  app:
+    # other configurations
+    volumes:
+      # other volumes
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config.yml:/app/config.yml:ro
+```
 
 ## Development 🔧
 
