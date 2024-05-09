@@ -168,6 +168,9 @@ services:
       - ./config.yml:/app/config.yml:ro
 ```
 
+> [!NOTE]  
+> The reason we use `/data/.` instead of `/data` is that the retrieval process depends on the `docker cp` command. Imagine you want to mount the `/data` folder to `/backups/service-1`. If you don't use `/data/.`, it will mount to `/backups/service-1/data` instead of `/backups/service-1`.
+
 ## Development 🔧
 
 Setting up your Rust development environment is pretty standard. However, to streamline the process and spare you from constantly running the `cargo run` command with a slew of environment variables, you can use `./dev.sh`.
