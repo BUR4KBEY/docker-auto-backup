@@ -57,27 +57,35 @@ pub fn cleanup(file_name: &str) {
     }
 }
 
+fn exec_scripts_to_the_container(
+    container_name: &String,
+    scripts: &Vec<String>,
+    log: impl Fn(&String),
+) {
+    for command_str in scripts {
+        log(command_str);
+
+        let mut command = Command::new("docker");
+        command
+            .arg("exec")
+            .arg("-i")
+            .arg(container_name)
+            .arg("sh")
+            .arg("-c")
+            .arg(command_str);
+        spawn_child_process(&mut command);
+    }
+}
+
 pub async fn create_docker_containers_backup(config: &Config) {
     for container in &config.containers {
         if let Some(pre_build_script) = &container.pre_build_script {
-            for command_str in pre_build_script {
+            exec_scripts_to_the_container(&container.name, pre_build_script, |script| {
                 info!(
                     "[{}] running pre-build script: \"{}\"",
-                    &container.name, command_str
+                    &container.name, script
                 );
-
-                let mut command = Command::new("docker");
-                command
-                    .arg("exec")
-                    .arg("-i")
-                    .arg(&container.name)
-                    .arg("sh")
-                    .arg("-c")
-                    .arg(&command_str);
-                spawn_child_process(&mut command);
-
-                info!("[{}] done", &container.name);
-            }
+            });
         }
 
         for BackupFile(target_path, backup_path) in &container.files {
@@ -103,24 +111,12 @@ pub async fn create_docker_containers_backup(config: &Config) {
         }
 
         if let Some(post_build_script) = &container.post_build_script {
-            for command_str in post_build_script {
+            exec_scripts_to_the_container(&container.name, post_build_script, |script| {
                 info!(
                     "[{}] running post-build script: \"{}\"",
-                    &container.name, command_str
+                    &container.name, script
                 );
-
-                let mut command = Command::new("docker");
-                command
-                    .arg("exec")
-                    .arg("-i")
-                    .arg(&container.name)
-                    .arg("sh")
-                    .arg("-c")
-                    .arg(&command_str);
-                spawn_child_process(&mut command);
-
-                info!("[{}] done", &container.name);
-            }
+            });
         }
     }
 }
