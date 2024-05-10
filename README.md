@@ -22,13 +22,14 @@ Given my newcomer status in Rust, I welcome pull requests for both incorporating
 We use Docker containers to run this project, following these steps:
 
 1. A designated backup folder, typically `/backup`, serves as the repository. Whatever data we want to back up must be mounted to this folder, like so:
-    ```yaml
-    services:
-      app:
-        ...
-        volumes:
-          - /path/to/data/we/want/to/backup:/backup/service-1:ro
-    ```
+
+   ```yaml
+   services:
+     app:
+       # ...
+       volumes:
+         - /path/to/data/we/want/to/backup:/backup/service-1:ro
+   ```
 
 2. Firstly, our Rust application spawns a `temp` folder, an identical copy of the `/backup` folder, for both compression and encryption purposes.
 
@@ -46,85 +47,73 @@ This entire sequence of operations is automated through cronjobs.
 
 ## Deploying 🚀
 
-Follow these steps to deploy Docker Auto Backup:
+1. Create a `docker-compose.yml` file:
 
-1. Clone the repository to the machine (referred to as the server later) you want to deploy:
-    ```bash
-    git clone git@github.com:BUR4KBEY/docker-auto-backup.git
-    cd docker-auto-backup
-    ```
+   ```yml
+   services:
+     app:
+       image: burakbey/docker-auto-backup:latest
+       container_name: docker-auto-backup
+       restart: unless-stopped
+       environment:
+         BACKUP_FOLDER_PATH: /backup # optional, you must mount to /app/backup if you don't set
+         BACKBLAZE_KEY_ID: ${BACKBLAZE_KEY_ID}
+         BACKBLAZE_APPLICATION_KEY: ${BACKBLAZE_APPLICATION_KEY}
+         BACKBLAZE_BUCKET_REGION: ${BACKBLAZE_BUCKET_REGION}
+         BACKBLAZE_BUCKET_NAME: ${BACKBLAZE_BUCKET_NAME}
+         GPG_RECIPIENT: ${GPG_RECIPIENT}
+         # NTFY_URL: https://ntfy.sh/example # optional
+         # NTFY_CA_FILE_PATH: /certs/ca.pem # optional, used to setting up a custom ca file while requesting to the ntfy server
+         # CRON_SYNTAX: '0 4 * * *' # optional, default value is provided
+         # RUN_AT_STARTUP: false # optional, default value is provided
+         # DO_NOT_CLEANUP: false # optional, default value is provided
+         # ZSTD_COMPRESSION_LEVEL: 19 # optional, default value is provided, min 1, max 22
+       volumes:
+         - /etc/timezone:/etc/timezone:ro
+         - /etc/localtime:/etc/localtime:ro
+         - ../service-1/data:/backup/service-1:ro # /backup must be same as environment.BACKUP_FOLDER_PATH
+         - /path/to/things_should_be_backed_up:/backup/things:ro
+         - ./gpg:/gpg:ro
+         # - ./ca.pem:/certs/ca.pem # optional, check `NTFY_CA_FILE_PATH` environment variable
+   ```
 
-2. Build the image:
-    ```bash
-    docker build . -t docker-auto-backup-generator
-    ```
+   Additionally, if you prefer not to expose sensitive information directly in the compose file (recommended), create a `.env` file as follows:
 
-3. Create a `docker-compose.yml` file elsewhere on your system:
+   ```
+   BACKBLAZE_KEY_ID=""
+   BACKBLAZE_APPLICATION_KEY=""
+   BACKBLAZE_BUCKET_REGION=""
+   BACKBLAZE_BUCKET_NAME=""
+   GPG_RECIPIENT=""
+   ```
 
-    ```yml
-    services:
-      app:
-        image: docker-auto-backup-generator
-        container_name: docker-auto-backup
-        restart: unless-stopped
-        environment:
-          BACKUP_FOLDER_PATH: /backup # optional, you must mount to /app/backup if you don't set
-          BACKBLAZE_KEY_ID: ${BACKBLAZE_KEY_ID}
-          BACKBLAZE_APPLICATION_KEY: ${BACKBLAZE_APPLICATION_KEY}
-          BACKBLAZE_BUCKET_REGION: ${BACKBLAZE_BUCKET_REGION}
-          BACKBLAZE_BUCKET_NAME: ${BACKBLAZE_BUCKET_NAME}
-          GPG_RECIPIENT: ${GPG_RECIPIENT}
-          # NTFY_URL: https://ntfy.sh/example # optional
-          # NTFY_CA_FILE_PATH: /certs/ca.pem # optional, used to setting up a custom ca file while requesting to the ntfy server
-          # CRON_SYNTAX: '0 4 * * *' # optional, default value is provided
-          # RUN_AT_STARTUP: false # optional, default value is provided
-          # DO_NOT_CLEANUP: false # optional, default value is provided
-          # ZSTD_COMPRESSION_LEVEL: 19 # optional, default value is provided, min 1, max 22
-        volumes:
-          - /etc/timezone:/etc/timezone:ro
-          - /etc/localtime:/etc/localtime:ro
-          - ../service-1/data:/backup/service-1:ro # /backup must be same as environment.BACKUP_FOLDER_PATH
-          - /path/to/things_should_be_backed_up:/backup/things:ro
-          - ./gpg:/gpg:ro
-          # - ./ca.pem:/certs/ca.pem # optional, check `NTFY_CA_FILE_PATH` environment variable
-    ```
+   Obtain your [BackBlaze B2](https://www.backblaze.com/cloud-storage) credentials by following the instructions [here](https://www.backblaze.com/apidocs/introduction-to-the-s3-compatible-api).
 
-    Additionally, if you prefer not to expose sensitive information directly in the compose file (recommended), create a `.env` file as follows:
+   Generate a GPG key on your local machine (referred to as the host machine later). For details, a quick search should guide you. Then, put your **GPG Key ID** into the `GPG_RECIPIENT` environment variable.
 
-    ```
-    BACKBLAZE_KEY_ID=""
-    BACKBLAZE_APPLICATION_KEY=""
-    BACKBLAZE_BUCKET_REGION=""
-    BACKBLAZE_BUCKET_NAME=""
-    GPG_RECIPIENT=""
-    ```
+   Export your GPG key's public key, create a folder named `gpg` inside the compose file's directory, and place your `public_key.gpg` file into that folder. The name is arbitrary and does not matter.
 
-    Obtain your [BackBlaze B2](https://www.backblaze.com/cloud-storage) credentials by following the instructions [here](https://www.backblaze.com/apidocs/introduction-to-the-s3-compatible-api).
+   The final project tree should resemble:
 
-    Generate a GPG key on your local machine (referred to as the host machine later). For details, a quick search should guide you. Then, put your **GPG Key ID** into the `GPG_RECIPIENT` environment variable.
+   ```
+   compose-project/
+   ├── gpg/
+   │   └── public_key.gpg
+   ├── .env
+   └── docker-compose.yml
+   ```
 
-    Export your GPG key's public key, create a folder named `gpg` inside the compose file's directory, and place your `public_key.gpg` file into that folder. The name is arbitrary and does not matter.
+2. Deploy the stack:
 
-    The final project tree should resemble:
+   ```bash
+   docker compose up -d
+   ```
 
-    ```
-    compose-project/
-    ├── gpg/
-    │   └── public_key.gpg
-    ├── .env
-    └── docker-compose.yml
-    ```
-  
-  4. Deploy the stack:
-      ```bash
-      docker compose up -d
-      ```
+   The application should now be operational. You can test it by either setting the `RUN_AT_STARTUP` environment variable to true and checking the logs with the command `docker-compose logs app -f`, or you can execute the following command to test:
 
-      The application should now be operational. You can test it by either setting the `RUN_AT_STARTUP` environment variable to true and checking the logs with the command `docker-compose logs app -f`, or you can execute the following command to test:
-
-      ```bash
-      docker compose exec -it app /app/docker-auto-backup
-      ```
+   ```bash
+   docker compose exec -it app /app/docker-auto-backup
+   ```
 
 ## Direct Backups From Containers ⭐
 
@@ -152,9 +141,9 @@ containers:
 
 In this configuration file:
 
-  - For the container named `service-1`, the files located at `/data/.` are retrieved and mounted to `/backup/service-1/data` within the backup container.
+- For the container named `service-1`, the files located at `/data/.` are retrieved and mounted to `/backup/service-1/data` within the backup container.
 
-  - For the container named `service-2`, the specified pre-build script is executed first (`touch /root/logs` and `echo "pre-build script ran" >> /root/logs`), followed by retrieving the files at `/data/.` and mounting them to `/backup/service-2/data` within the backup container. Additionally, the post-build script (`echo "post-build script ran" >> /root/logs`) is executed in the `service-2` container as part of the cleanup process.
+- For the container named `service-2`, the specified pre-build script is executed first (`touch /root/logs` and `echo "pre-build script ran" >> /root/logs`), followed by retrieving the files at `/data/.` and mounting them to `/backup/service-2/data` within the backup container. Additionally, the post-build script (`echo "post-build script ran" >> /root/logs`) is executed in the `service-2` container as part of the cleanup process.
 
 > [!NOTE]  
 > The reason we use `/data/.` instead of `/data` is that the retrieval process depends on the `docker cp` command. Imagine you want to mount the `/data` folder to `/backups/service-1`. If you don't use `/data/.`, it will mount to `/backups/service-1/data` instead of `/backups/service-1`.
@@ -179,12 +168,12 @@ To set it up:
 
 1. Copy the `dev.example.sh` file and rename it to `dev.sh`.
 
-2. Provide the necessary environment variables in `dev.sh` based on your preferences. 
+2. Provide the necessary environment variables in `dev.sh` based on your preferences.
 
 3. Make the script executable:
-    ```bash
-    chmod +x dev.sh
-    ```
+   ```bash
+   chmod +x dev.sh
+   ```
 
 ## Unpacking the Encrypted Backup 🔐
 
