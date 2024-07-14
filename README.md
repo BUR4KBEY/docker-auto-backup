@@ -180,3 +180,9 @@ To set it up:
 Imagine you've downloaded a backup, and now you're ready to unpack it. Sure, you could type a bunch of commands, but here's a simpler way:
 
 Run the `./unpack_backup.sh backup_file.tar.zst.gpg` script on your host machine. You'll be prompted to enter your passphrase. Once done, you should find a `backup` folder in your current working directory.
+
+## ☕ Support
+
+If you find this project useful and would like to support [me](https://github.com/BUR4KBEY), you can do so by visiting [my website](https://burakbey.dev).
+
+<a href="https://burakbey.dev" target="_blank"><img src="https://burakbey.dev/github_support_snippet.png" style="height: 56px !important;width: 200px !important;" alt="Buy me a coffee"></img></a>
